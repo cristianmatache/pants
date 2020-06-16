@@ -95,11 +95,12 @@ def _raise_did_you_mean(address_family: AddressFamily, name: str, source=None) -
 @rule
 async def find_build_file(address: Address) -> BuildFileAddress:
     address_family = await Get[AddressFamily](Dir(address.spec_path))
-    if address not in address_family.addressables:
+    addresses = address_family.addressables
+    if address not in addresses:
         _raise_did_you_mean(address_family=address_family, name=address.target_name)
     return next(
         build_file_address
-        for build_file_address in address_family.addressables.keys()
+        for build_file_address in addresses
         if build_file_address == address
     )
 
