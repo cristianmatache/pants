@@ -118,9 +118,14 @@ async def hydrate_struct(address_mapper: AddressMapper, address: Address) -> Hyd
     Recursively collects any embedded addressables within the Struct, but will not walk into a
     dependencies field, since those should be requested explicitly by rules.
     """
-    build_file_address = await Get[BuildFileAddress](Address, address)
     address_family = await Get[AddressFamily](Dir(address.spec_path))
-    struct = address_family.addressables.get(build_file_address)
+    struct = address_family.addressables.get(address)  # type: ignore[call-overload]
+    addresses = address_family.addressables
+    if not struct or address not in addresses:
+        _raise_did_you_mean(address_family, address.target_name)
+    # TODO: This is effectively: "get the BuildFileAddress for this Address".
+    #  see https://github.com/pantsbuild/pants/issues/6657
+    address = next(build_address for build_address in addresses if build_address == address)
 
     inline_dependencies = []
 
